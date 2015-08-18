@@ -490,3 +490,25 @@ class S3BotoStorage(Storage):
             name = self._clean_name(name)
             return name
         return super(S3BotoStorage, self).get_available_name(name, max_length)
+
+
+@deconstructible
+class S3CloudFrontStorage(S3BotoStorage):
+    """
+    S3/CloudFront Storage
+
+    This storage is designed to be used with S3 buckets that are exposed via
+    CloudFront. Files will be saved into S3, but will be saved via a configured
+    CloudFront base_url: `AWS_CLOUDFRONT_URL`.
+
+    Note that you'll need to manually configure Amazon Cloudfront CDN to serve
+    your bucket for this to work.
+    """
+
+    def __init__(self, base_url=setting('AWS_CLOUDFRONT_URL'),
+                 *args, **kwargs):
+        super(S3CloudFrontStorage, self).__init__(*args, **kwargs)
+        self.base_url = base_url
+
+    def url(self, name, headers=None, response_headers=None):
+        return '{}{}'.format(self.base_url, name)
