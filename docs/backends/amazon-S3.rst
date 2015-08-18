@@ -181,3 +181,16 @@ Clean up the temporary files::
     >>> obj2.normal.delete()
     >>> obj3.default.delete()
     >>> obj4.random.delete()
+
+CloudFront
+----------
+
+Amazon CloudFront CDN can be configured to serve directly from S3 buckets. If
+you're uploading files that need to be serve via CDN, you can use the
+CloudFront storage instead. It will store files into S3, but serve them via an
+URL straight to CloudFront CDN::
+
+    STATICFILES_STORAGE = 'storages.backends.s3boto.S3CloudFrontStorage'
+    AWS_CLOUDFRONT_URL = 'http://my_site.cloudfront.net/'
+
+This is especially recomended for static files.
