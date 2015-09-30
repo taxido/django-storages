@@ -10,6 +10,7 @@ from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.utils.encoding import force_text, smart_str, filepath_to_uri, force_bytes
 
 try:
+    from boto import cloudfront
     from boto import __version__ as boto_version
     from boto.s3.connection import S3Connection, SubdomainCallingFormat
     from boto.exception import S3ResponseError
@@ -505,10 +506,26 @@ class S3CloudFrontStorage(S3BotoStorage):
     your bucket for this to work.
     """
 
-    def __init__(self, base_url=setting('AWS_CLOUDFRONT_URL'),
-                 *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(S3CloudFrontStorage, self).__init__(*args, **kwargs)
-        self.base_url = base_url
+        if setting('AWS_CLOUDFRONT_SIGNED_URL'):
+            self.cf_connection = cloudfront.CloudFrontConnection(
+                setting('AWS_ACCESS_KEY_ID'), setting('AWS_SECRET_ACCESS_KEY')
+            )
+            self.cf_dist = self.cf_connection.get_distribution_info(setting('AWS_CLOUDFRONT_DISTRIBUTION_ID'))
+            self.base_url = "%s://%s" % (setting('AWS_CLOUDFRONT_DISTRIBUTION_PROTOCOL'), self.cf_dist.domain_name)
+        else:
+            self.base_url = "%s://%s" % (setting('AWS_CLOUDFRONT_DISTRIBUTION_PROTOCOL'),
+                                         setting('AWS_CLOUDFRONT_DISTRIBUTION_DOMAIN'))
 
     def url(self, name, headers=None, response_headers=None):
-        return '{}{}'.format(self.base_url, name)
+        url = '{}{}'.format(self.base_url, name)
+
+        if setting('AWS_CLOUDFRONT_SIGNED_URL'):
+            return self.cf_dist.create_signed_url(
+                url,
+                setting('AWS_CLOUDFRONT_KEY_PAIR_ID'),
+                setting('AWS_CLOUDFRONT_LINK_EXPIRES_TIME'),
+                private_key_file=setting('AWS_CLOUDFRONT_PRIV_KEY_FILE')
+            )
+        return url
