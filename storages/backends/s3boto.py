@@ -500,7 +500,6 @@ class S3CloudFrontStorage(S3BotoStorage):
 
     This storage is designed to be used with S3 buckets that are exposed via
     CloudFront. Files will be saved into S3, but will be saved via a configured
-    CloudFront base_url: `AWS_CLOUDFRONT_URL`.
 
     Note that you'll need to manually configure Amazon Cloudfront CDN to serve
     your bucket for this to work.
