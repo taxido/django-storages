@@ -1,4 +1,5 @@
 import os
+import time
 import posixpath
 import mimetypes
 from datetime import datetime
@@ -520,11 +521,12 @@ class S3CloudFrontStorage(S3BotoStorage):
     def url(self, name, headers=None, response_headers=None):
         url = '{}/{}'.format(self.base_url, name)
 
+        expires = int(time.time()) + setting('AWS_CLOUDFRONT_LINK_EXPIRES_TIME')
         if setting('AWS_CLOUDFRONT_SIGNED_URL'):
             return self.cf_dist.create_signed_url(
                 url,
                 setting('AWS_CLOUDFRONT_KEY_PAIR_ID'),
-                setting('AWS_CLOUDFRONT_LINK_EXPIRES_TIME'),
+                expires,
                 private_key_file=setting('AWS_CLOUDFRONT_PRIV_KEY_FILE')
             )
         return url
