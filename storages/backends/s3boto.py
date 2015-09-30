@@ -518,7 +518,7 @@ class S3CloudFrontStorage(S3BotoStorage):
                                          setting('AWS_CLOUDFRONT_DISTRIBUTION_DOMAIN'))
 
     def url(self, name, headers=None, response_headers=None):
-        url = '{}{}'.format(self.base_url, name)
+        url = '{}/{}'.format(self.base_url, name)
 
         if setting('AWS_CLOUDFRONT_SIGNED_URL'):
             return self.cf_dist.create_signed_url(
